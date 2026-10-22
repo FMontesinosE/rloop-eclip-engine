@@ -70,7 +70,7 @@ Measured on AMD Ryzen 9 5950X (16C/32T), 64GB RAM, NVMe SSD:
 ## Technical Architecture
 
 - **Interval Engine**: Polars lazy evaluation with Arrow IPC streaming for memory-mapped access
-- **Permutation Strategy**: Vectorized chromosome-stratified sampling using PyTorch tensor operations to avoid GC bottlenecks
+- **Permutation Strategy**: Vectorized chromosome-stratified sampling using NumPy arrays for efficient resampling
 - **Normalization**: Automatic UCSC ↔ Ensembl chromosome naming reconciliation via regex patterns
 - **Edge Handling**: Epsilon smoothing for zero-overlap permutations, automatic exclusion of unlocalized contigs
 
