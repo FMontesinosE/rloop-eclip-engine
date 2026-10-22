@@ -1,8 +1,8 @@
 """
 High-performance interval intersection and enrichment engine.
 
-Implements vectorized Monte Carlo permutation testing using PyTorch tensors
-to minimize Python GC overhead during resampling.
+Implements vectorized Monte Carlo permutation testing using NumPy arrays
+for efficient resampling with minimal overhead.
 """
 
 import time
@@ -11,7 +11,6 @@ from typing import Dict, Tuple
 
 import numpy as np
 import polars as pl
-import torch
 from loguru import logger
 from scipy import stats
 
@@ -34,7 +33,6 @@ class EnrichmentEngine:
         # Set random seed for reproducibility
         if config.seed is not None:
             np.random.seed(config.seed)
-            torch.manual_seed(config.seed)
             logger.info(f"Random seed set to {config.seed}")
 
     def load_data(self) -> None:
@@ -182,7 +180,10 @@ class EnrichmentEngine:
         shuffled_dfs = []
         width_idx = 0
 
-        for chrom, group_df in chrom_groups.items():
+        for chrom_key, group_df in chrom_groups.items():
+            # Polars partition_by returns tuples as keys in newer versions
+            chrom = chrom_key[0] if isinstance(chrom_key, tuple) else chrom_key
+
             chrom_size = self.genome_sizes.get(chrom)
             if chrom_size is None:
                 logger.warning(f"Chromosome {chrom} not in genome sizes, skipping")

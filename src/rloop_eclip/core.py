@@ -134,6 +134,23 @@ def load_bed_to_polars(
 
     columns = schema_map[expected_format]
 
+    # Check if file has any non-comment data to avoid NoDataError
+    has_data = False
+    with open(bed_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                has_data = True
+                break
+
+    if not has_data:
+        logger.warning(f"BED file is empty or contains only comments: {bed_path}")
+        return pl.DataFrame(schema={
+            "chrom": pl.Utf8,
+            "start": pl.Int64,
+            "end": pl.Int64
+        }).lazy()
+
     try:
         # Use Polars scan_csv for lazy loading (memory-efficient)
         lf = pl.scan_csv(
@@ -141,7 +158,7 @@ def load_bed_to_polars(
             separator="\t",
             has_header=False,
             new_columns=columns[:10],  # Cap at 10 columns max
-            dtypes={"chrom": pl.Utf8, "start": pl.Int64, "end": pl.Int64},
+            schema_overrides={"chrom": pl.Utf8, "start": pl.Int64, "end": pl.Int64},
             comment_prefix="#",
         )
 
