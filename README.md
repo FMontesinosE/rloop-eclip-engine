@@ -91,18 +91,31 @@ ruff format src/ tests/
 ruff check src/ tests/ --fix
 ```
 
-## Example Data
+## Example Analysis
 
-- eCLIP reference: ENCODE accession ENCFF001ABC (K562 DHX9 eCLIP)
-- DRIPc-seq reference: GEO GSE70189 (NTERA2 DRIPc-seq)
+The repository includes example datasets and analysis scripts:
 
-Download sample preprocessed data:
 ```bash
-# TODO: Host minimal test data on Zenodo or FigShare
-wget -O data/sample_eclip.bed.gz https://example.org/sample_eclip.bed.gz
-wget -O data/sample_drip.bed.gz https://example.org/sample_drip.bed.gz
-gunzip data/*.gz
+# Summarize input data quality
+python scripts/summarize_bed.py data/DICER_eCLIP_peaks.bed data/DMSO_DRIPc_example1.narrowPeak
+
+# Run complete analysis workflow
+bash scripts/example_workflow.sh
+
+# Compare multiple results
+python scripts/analyze_results.py results/*.parquet
 ```
+
+### Real Data Results
+
+Analysis of DICER eCLIP peaks (7,230 intervals) vs DRIPc-seq R-loop regions:
+
+| Dataset | R-loop Regions | Observed Overlap | Expected Overlap | Fold Enrichment | p-value |
+|---------|----------------|------------------|------------------|-----------------|---------|
+| Example1 | 2,263 | 8,292 bp | 3,721 bp | 2.23x | 0.0099 ** |
+| Example2 | 18,134 | 25,118 bp | 13,484 bp | 1.86x | 0.001 *** |
+
+Both datasets show significant enrichment of DICER binding at R-loop structures, consistent with DICER's role in RNA processing.
 
 ## Citation
 

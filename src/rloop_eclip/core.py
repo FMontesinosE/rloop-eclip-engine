@@ -134,13 +134,15 @@ def load_bed_to_polars(
 
     columns = schema_map[expected_format]
 
-    # Check if file has any non-comment data to avoid NoDataError
+    # Check if file has any non-comment data and detect column count
     has_data = False
+    actual_columns = 0
     with open(bed_path, 'r') as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith('#'):
                 has_data = True
+                actual_columns = len(line.split('\t'))
                 break
 
     if not has_data:
@@ -151,13 +153,21 @@ def load_bed_to_polars(
             "end": pl.Int64
         }).lazy()
 
+    # Generate column names based on actual file structure
+    # Use provided column names if available, otherwise generic names
+    if actual_columns <= len(columns):
+        col_names = columns[:actual_columns]
+    else:
+        # File has more columns than expected (e.g., narrowPeak has 10, bed6 has 6)
+        col_names = columns + [f"col{i}" for i in range(len(columns), actual_columns)]
+
     try:
         # Use Polars scan_csv for lazy loading (memory-efficient)
         lf = pl.scan_csv(
             bed_path,
             separator="\t",
             has_header=False,
-            new_columns=columns[:10],  # Cap at 10 columns max
+            new_columns=col_names,
             schema_overrides={"chrom": pl.Utf8, "start": pl.Int64, "end": pl.Int64},
             comment_prefix="#",
         )
